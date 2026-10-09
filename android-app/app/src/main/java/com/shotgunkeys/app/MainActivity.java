@@ -1,4 +1,4 @@
-﻿package com.shotgunkeys.app;
+package com.shotgunkeys.app;
 
 import android.app.Activity;
 import android.media.MediaPlayer;

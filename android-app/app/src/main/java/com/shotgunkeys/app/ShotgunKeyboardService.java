@@ -1,4 +1,4 @@
-﻿package com.shotgunkeys.app;
+package com.shotgunkeys.app;
 
 import android.inputmethodservice.InputMethodService;
 import android.graphics.Color;
