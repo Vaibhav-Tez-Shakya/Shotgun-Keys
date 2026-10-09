@@ -1,0 +1,11 @@
+﻿.venv/
+__pycache__/
+*.py[cod]
+build/
+dist/
+*.spec.bak
+main.before_*.py
+ShotgunKeys.before_*.spec
+.env
+.env.*
+!.env.example
