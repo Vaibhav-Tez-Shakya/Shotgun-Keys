@@ -7,9 +7,11 @@ import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.StateListDrawable;
 import android.inputmethodservice.InputMethodService;
 import android.media.AudioAttributes;
-import android.media.SoundPool;
+import android.media.MediaPlayer;
 import android.util.TypedValue;
 import android.view.Gravity;
+import android.view.HapticFeedbackConstants;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.inputmethod.InputConnection;
 import android.widget.Button;
@@ -18,8 +20,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class ShotgunKeyboardService extends InputMethodService {
-    private SoundPool soundPool;
-    private int soundId = -1;
+    private static final int POOL_SIZE = 4;
+    private final MediaPlayer[] players = new MediaPlayer[POOL_SIZE];
+    private int poolIndex = 0;
     private boolean soundEnabled = true;
     private boolean isShifted = false;
     private final List<Button> letterKeys = new ArrayList<>();
@@ -30,25 +33,57 @@ public class ShotgunKeyboardService extends InputMethodService {
         );
     }
 
-    @Override
-    public void onCreate() {
-        super.onCreate();
+    private void initAudioPool() {
         AudioAttributes attrs = new AudioAttributes.Builder()
-            .setUsage(AudioAttributes.USAGE_ASSISTANCE_SONIFICATION)
-            .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
+            .setUsage(AudioAttributes.USAGE_MEDIA)
+            .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
             .build();
-        soundPool = new SoundPool.Builder().setMaxStreams(4).setAudioAttributes(attrs).build();
-        try {
-            AssetFileDescriptor afd = getAssets().openFd("shotgun.wav");
-            soundId = soundPool.load(afd, 1);
-        } catch (Exception e) {
-            android.util.Log.e("ShotgunKeys", "Error loading sound", e);
+
+        for (int i = 0; i < POOL_SIZE; i++) {
+            try {
+                MediaPlayer mp = new MediaPlayer();
+                mp.setAudioAttributes(attrs);
+                AssetFileDescriptor afd = getAssets().openFd("shotgun.wav");
+                mp.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+                afd.close();
+                mp.setVolume(1.0f, 1.0f);
+                mp.prepare();
+                players[i] = mp;
+            } catch (Exception e) {
+                android.util.Log.e("ShotgunKeys", "Pool init failed for slot " + i, e);
+            }
         }
     }
 
+    @Override
+    public void onCreate() {
+        super.onCreate();
+        initAudioPool();
+    }
+
     private void playShotgun() {
-        if (soundEnabled && soundId != -1) {
-            soundPool.play(soundId, 0.75f, 0.75f, 0, 0, 1.0f);
+        if (!soundEnabled) return;
+        try {
+            MediaPlayer mp = players[poolIndex];
+            poolIndex = (poolIndex + 1) % POOL_SIZE;
+            if (mp != null) {
+                if (mp.isPlaying()) {
+                    mp.seekTo(0);
+                } else {
+                    mp.start();
+                }
+            } else {
+                // Fallback instant player if slot wasn't initialized
+                MediaPlayer fallback = new MediaPlayer();
+                AssetFileDescriptor afd = getAssets().openFd("shotgun.wav");
+                fallback.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+                afd.close();
+                fallback.setOnCompletionListener(MediaPlayer::release);
+                fallback.prepare();
+                fallback.start();
+            }
+        } catch (Exception e) {
+            android.util.Log.e("ShotgunKeys", "Key sound playback error", e);
         }
     }
 
@@ -96,10 +131,17 @@ public class ShotgunKeyboardService extends InputMethodService {
             letterKeys.add(btn);
         }
 
+        // Fire sound & haptics immediately on finger touch-down (ACTION_DOWN)
+        btn.setOnTouchListener((v, event) -> {
+            if (event.getAction() == MotionEvent.ACTION_DOWN) {
+                v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
+                playShotgun();
+            }
+            return false;
+        });
+
         btn.setOnClickListener(v -> {
             InputConnection ic = getCurrentInputConnection();
-            playShotgun();
-
             switch (label) {
                 case "DEL":
                     if (ic != null) ic.deleteSurroundingText(1, 0);
@@ -160,16 +202,15 @@ public class ShotgunKeyboardService extends InputMethodService {
         root.setPadding(dp(6), dp(10), dp(6), dp(12));
         root.setBackgroundColor(Color.parseColor("#15171C"));
 
-        // Top Action / Soundboard Bar
         LinearLayout toolbar = new LinearLayout(this);
         toolbar.setOrientation(LinearLayout.HORIZONTAL);
         toolbar.setGravity(Gravity.END);
         toolbar.setPadding(dp(4), 0, dp(4), dp(4));
 
         Button soundToggle = new Button(this);
-        soundToggle.setText("SFX: ON");
+        soundToggle.setText(soundEnabled ? "SFX: ON" : "SFX: OFF");
         soundToggle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        soundToggle.setTextColor(Color.parseColor("#FFD166"));
+        soundToggle.setTextColor(soundEnabled ? Color.parseColor("#FFD166") : Color.parseColor("#8E929B"));
         soundToggle.setBackground(createKeyBackground(Color.parseColor("#20232A"), Color.parseColor("#2C313B"), Color.parseColor("#383E4A")));
         LinearLayout.LayoutParams tbParams = new LinearLayout.LayoutParams(dp(110), dp(32));
         toolbar.addView(soundToggle, tbParams);
@@ -177,10 +218,11 @@ public class ShotgunKeyboardService extends InputMethodService {
 
         soundToggle.setOnClickListener(v -> {
             soundEnabled = !soundEnabled;
+            soundToggle.setText(soundEnabled ? "SFX: ON" : "SFX: OFF");
             soundToggle.setTextColor(soundEnabled ? Color.parseColor("#FFD166") : Color.parseColor("#8E929B"));
+            if (soundEnabled) playShotgun();
         });
 
-        // Keyboard Matrix
         addRow(root, new String[]{"q", "w", "e", "r", "t", "y", "u", "i", "o", "p"});
         addRow(root, new String[]{"a", "s", "d", "f", "g", "h", "j", "k", "l"});
         addRow(root, new String[]{"SHIFT", "z", "x", "c", "v", "b", "n", "m", "DEL"});
@@ -192,9 +234,11 @@ public class ShotgunKeyboardService extends InputMethodService {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        if (soundPool != null) {
-            soundPool.release();
-            soundPool = null;
+        for (int i = 0; i < POOL_SIZE; i++) {
+            if (players[i] != null) {
+                players[i].release();
+                players[i] = null;
+            }
         }
     }
 }

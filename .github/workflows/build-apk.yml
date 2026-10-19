@@ -33,13 +33,13 @@ jobs:
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ShotgunKeys-v2.0-debug
+          name: ShotgunKeys-v2.1-debug
           path: android-app/app/build/outputs/apk/debug/app-debug.apk
           if-no-files-found: error
 
       - name: Publish APK to GitHub Releases
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v2.0-latest
-          name: "Shotgun Keys v2.0 (Redesigned UI & Logo)"
+          tag_name: v2.1-latest
+          name: "Shotgun Keys v2.1 (Redesigned UI & Logo)"
           files: android-app/app/build/outputs/apk/debug/app-debug.apk
