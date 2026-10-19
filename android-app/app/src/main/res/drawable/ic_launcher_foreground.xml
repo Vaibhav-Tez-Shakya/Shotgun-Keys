@@ -1,0 +1,27 @@
+﻿<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Background Shield/Badge -->
+    <path
+        android:fillColor="#15171C"
+        android:pathData="M54,12 C78,12 90,24 90,48 C90,74 68,92 54,96 C40,92 18,74 18,48 C18,24 30,12 54,12 Z" />
+    <!-- Outer Ring Accent -->
+    <path
+        android:strokeColor="#FF6B35"
+        android:strokeWidth="2.5"
+        android:pathData="M54,16 C74,16 86,26 86,48 C86,70 66,87 54,91 C42,87 22,70 22,48 C22,26 34,16 54,16 Z" />
+    <!-- Stylized Shotgun Shell / Keycap -->
+    <path
+        android:fillColor="#FF6B35"
+        android:pathData="M38,44 L70,44 L66,70 C66,74 61,77 54,77 C47,77 42,74 42,70 Z" />
+    <!-- Brass Rim / Shell Cap -->
+    <path
+        android:fillColor="#FFD166"
+        android:pathData="M36,36 L72,36 C74,36 75,38 75,40 L75,44 L33,44 L33,40 C33,38 34,36 36,36 Z" />
+    <!-- Primer Center Spark -->
+    <path
+        android:fillColor="#15171C"
+        android:pathData="M51,40 A3,3 0 1,0 57,40 A3,3 0 1,0 51,40 Z" />
+</vector>
