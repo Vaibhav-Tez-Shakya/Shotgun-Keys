@@ -1,4 +1,4 @@
-﻿package com.shotgunkeys.app;
+package com.shotgunkeys.app;
 
 import android.content.res.AssetFileDescriptor;
 import android.graphics.Color;
@@ -167,7 +167,6 @@ public class ShotgunKeyboardService extends InputMethodService {
         toolbar.setPadding(dp(4), 0, dp(4), dp(4));
 
         Button soundToggle = new Button(this);
-        soundToggle.setText(soundEnabled ? "âš” SFX: ON" : "âš” SFX: OFF");
         soundToggle.setText("SFX: ON");
         soundToggle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
         soundToggle.setTextColor(Color.parseColor("#FFD166"));
@@ -178,7 +177,6 @@ public class ShotgunKeyboardService extends InputMethodService {
 
         soundToggle.setOnClickListener(v -> {
             soundEnabled = !soundEnabled;
-            soundToggle.setText(soundEnabled ? "SFX: ON" : "SFX: OFF");
             soundToggle.setTextColor(soundEnabled ? Color.parseColor("#FFD166") : Color.parseColor("#8E929B"));
         });
 

@@ -1,4 +1,4 @@
-﻿name: Build Shotgun Keys APK
+name: Build Shotgun Keys APK
 
 on:
   push:
@@ -20,10 +20,6 @@ jobs:
         with:
           distribution: temurin
           java-version: "21"
-
-      - name: Accept Android SDK Licenses
-        run: |
-          yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses || true
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4

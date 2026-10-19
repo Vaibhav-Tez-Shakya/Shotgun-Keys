@@ -1,33 +1,50 @@
 package com.shotgunkeys.app;
 
 import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Color;
+import android.graphics.Typeface;
+import android.graphics.drawable.GradientDrawable;
 import android.media.MediaPlayer;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.util.TypedValue;
 import android.view.Gravity;
-import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SeekBar;
 import android.widget.TextView;
-import android.graphics.Color;
 
 public class MainActivity extends Activity {
-    private float volume = 1f;
+    private float volume = 1.0f;
     private boolean muted = false;
+
+    private int dp(int v) {
+        return (int) TypedValue.applyDimension(
+            TypedValue.COMPLEX_UNIT_DIP, v, getResources().getDisplayMetrics()
+        );
+    }
+
+    private GradientDrawable pill(String hexBg, String hexStroke, int radiusDp) {
+        GradientDrawable gd = new GradientDrawable();
+        gd.setColor(Color.parseColor(hexBg));
+        gd.setCornerRadius(dp(radiusDp));
+        if (hexStroke != null) gd.setStroke(dp(1), Color.parseColor(hexStroke));
+        return gd;
+    }
 
     private void play(String file) {
         if (muted) return;
         try {
             MediaPlayer player = new MediaPlayer();
-            player.setDataSource(getAssets().openFd(file));
+            var afd = getAssets().openFd(file);
+            player.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
+            afd.close();
             player.setVolume(volume, volume);
-            player.setOnCompletionListener(p -> {
-                p.release();
-            });
-            player.setOnErrorListener((p, what, extra) -> {
-                p.release();
-                return true;
-            });
+            player.setOnCompletionListener(MediaPlayer::release);
+            player.setOnErrorListener((p, w, e) -> { p.release(); return true; });
             player.prepare();
             player.start();
         } catch (Exception e) {
@@ -35,15 +52,15 @@ public class MainActivity extends Activity {
         }
     }
 
-    private Button button(String label, LinearLayout parent) {
+    private Button makeBtn(String label, String bgHex, String borderHex, LinearLayout parent) {
         Button b = new Button(this);
         b.setText(label);
+        b.setAllCaps(false);
         b.setTextColor(Color.WHITE);
-        b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(
-            Color.rgb(255, 107, 53)));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(
-            0, LinearLayout.LayoutParams.WRAP_CONTENT, 1f);
-        lp.setMargins(6, 8, 6, 8);
+        b.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
+        b.setBackground(pill(bgHex, borderHex, 10));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        lp.setMargins(dp(6), dp(6), dp(6), dp(6));
         parent.addView(b, lp);
         return b;
     }
@@ -51,41 +68,45 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
-        getWindow().setStatusBarColor(Color.rgb(16, 17, 20));
-        getWindow().setNavigationBarColor(Color.rgb(16, 17, 20));
+        getWindow().setStatusBarColor(Color.parseColor("#101114"));
+        getWindow().setNavigationBarColor(Color.parseColor("#101114"));
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(20, 24, 20, 20);
-        root.setBackgroundColor(Color.rgb(16, 17, 20));
+        root.setPadding(dp(20), dp(28), dp(20), dp(20));
+        root.setBackgroundColor(Color.parseColor("#101114"));
 
         TextView title = new TextView(this);
         title.setText("SHOTGUN KEYS");
-        title.setTextSize(28);
-        title.setTextColor(Color.WHITE);
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26);
+        title.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
+        title.setTextColor(Color.parseColor("#FF6B35"));
         title.setGravity(Gravity.CENTER);
         root.addView(title);
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("Soundboard  •  Keyboard sound effects");
-        subtitle.setTextColor(Color.LTGRAY);
+        subtitle.setText("Tactical Soundboard & Custom Mechanical IME");
+        subtitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
+        subtitle.setTextColor(Color.parseColor("#9BA1AE"));
         subtitle.setGravity(Gravity.CENTER);
-        subtitle.setPadding(0, 8, 0, 24);
+        subtitle.setPadding(0, dp(4), 0, dp(20));
         root.addView(subtitle);
 
         LinearLayout row1 = new LinearLayout(this);
         row1.setOrientation(LinearLayout.HORIZONTAL);
         root.addView(row1);
 
-        Button fire = button("FIRE", row1);
-        Button reload = button("RELOAD", row1);
+        Button fire = makeBtn("FIRE SHOTGUN", "#FF6B35", "#FFA573", row1);
+        Button reload = makeBtn("COCK & RELOAD", "#262930", "#3F4450", row1);
         fire.setOnClickListener(v -> play("shotgun.wav"));
         reload.setOnClickListener(v -> play("dragon-studio-cinematic-shotgun-with-reload-467480.wav"));
 
         TextView volumeLabel = new TextView(this);
-        volumeLabel.setText("VOLUME");
-        volumeLabel.setTextColor(Color.WHITE);
-        volumeLabel.setPadding(6, 24, 6, 4);
+        volumeLabel.setText("MASTER VOLUME: 100%");
+        volumeLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        volumeLabel.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
+        volumeLabel.setTextColor(Color.parseColor("#FFD166"));
+        volumeLabel.setPadding(dp(6), dp(16), dp(6), dp(6));
         root.addView(volumeLabel);
 
         SeekBar seek = new SeekBar(this);
@@ -95,29 +116,46 @@ public class MainActivity extends Activity {
         seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar s, int p, boolean user) {
                 volume = p / 100f;
+                volumeLabel.setText("MASTER VOLUME: " + p + "%");
             }
             public void onStartTrackingTouch(SeekBar s) {}
             public void onStopTrackingTouch(SeekBar s) {}
         });
 
-        Button mute = new Button(this);
-        mute.setText("Mute audio");
-        root.addView(mute);
-        mute.setOnClickListener(v -> {
-            muted = !muted;
-            mute.setText(muted ? "Unmute audio" : "Mute audio");
+        LinearLayout row2 = new LinearLayout(this);
+        row2.setOrientation(LinearLayout.HORIZONTAL);
+        row2.setPadding(0, dp(12), 0, dp(8));
+        root.addView(row2);
+
+        Button enableBtn = makeBtn("1. Enable Keyboard", "#20232A", "#383E4A", row2);
+        Button selectBtn = makeBtn("2. Select Keyboard", "#20232A", "#FF6B35", row2);
+        enableBtn.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)));
+        selectBtn.setOnClickListener(v -> {
+            InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+            if (imm != null) imm.showInputMethodPicker();
         });
 
-        TextView info = new TextView(this);
-        info.setText("\nKeyboard setup\nSettings > System > Languages & input > On-screen keyboard\nEnable Shotgun Keys Keyboard, then select it when typing.");
-        info.setTextColor(Color.LTGRAY);
-        info.setPadding(6, 20, 6, 12);
-        root.addView(info);
+        EditText testInput = new EditText(this);
+        testInput.setHint("Tap here to test Shotgun Keys Keyboard...");
+        testInput.setHintTextColor(Color.parseColor("#6C727F"));
+        testInput.setTextColor(Color.WHITE);
+        testInput.setPadding(dp(14), dp(14), dp(14), dp(14));
+        testInput.setBackground(pill("#1A1D24", "#32363F", 10));
+        LinearLayout.LayoutParams etLp = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        etLp.setMargins(dp(6), dp(12), dp(6), dp(12));
+        root.addView(testInput, etLp);
 
-        Button test = new Button(this);
-        test.setText("TEST SOUND");
-        root.addView(test);
-        test.setOnClickListener(v -> play("shotgun.wav"));
+        Button mute = makeBtn("Audio: ACTIVE (Tap to Mute)", "#1A1D24", "#32363F", root);
+        LinearLayout.LayoutParams muteLp = new LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.MATCH_PARENT, dp(44));
+        muteLp.setMargins(dp(6), dp(4), dp(6), dp(4));
+        mute.setLayoutParams(muteLp);
+        mute.setOnClickListener(v -> {
+            muted = !muted;
+            mute.setText(muted ? "Audio: MUTED (Tap to Unmute)" : "Audio: ACTIVE (Tap to Mute)");
+            mute.setTextColor(muted ? Color.parseColor("#FF5964") : Color.WHITE);
+        });
 
         setContentView(root);
     }
