@@ -27,7 +27,7 @@ public class MainActivity extends Activity {
         );
     }
 
-    private GradientDrawable pill(String hexBg, String hexStroke, int radiusDp) {
+    private GradientDrawable cardBg(String hexBg, String hexStroke, int radiusDp) {
         GradientDrawable gd = new GradientDrawable();
         gd.setColor(Color.parseColor(hexBg));
         gd.setCornerRadius(dp(radiusDp));
@@ -52,14 +52,14 @@ public class MainActivity extends Activity {
         }
     }
 
-    private Button makeBtn(String label, String bgHex, String borderHex, LinearLayout parent) {
+    private Button makeButton(String label, String bgHex, String strokeHex, LinearLayout parent) {
         Button b = new Button(this);
         b.setText(label);
         b.setAllCaps(false);
         b.setTextColor(Color.WHITE);
         b.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
-        b.setBackground(pill(bgHex, borderHex, 10));
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(48), 1f);
+        b.setBackground(cardBg(bgHex, strokeHex, 12));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(50), 1f);
         lp.setMargins(dp(6), dp(6), dp(6), dp(6));
         parent.addView(b, lp);
         return b;
@@ -68,46 +68,47 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
-        getWindow().setStatusBarColor(Color.parseColor("#101114"));
-        getWindow().setNavigationBarColor(Color.parseColor("#101114"));
+        getWindow().setStatusBarColor(Color.parseColor("#0B0C10"));
+        getWindow().setNavigationBarColor(Color.parseColor("#0B0C10"));
 
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(20), dp(28), dp(20), dp(20));
-        root.setBackgroundColor(Color.parseColor("#101114"));
+        root.setPadding(dp(20), dp(32), dp(20), dp(20));
+        root.setBackgroundColor(Color.parseColor("#0B0C10"));
 
         TextView title = new TextView(this);
         title.setText("SHOTGUN KEYS");
-        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 26);
+        title.setTextSize(TypedValue.COMPLEX_UNIT_SP, 28);
         title.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
-        title.setTextColor(Color.parseColor("#FF6B35"));
+        title.setTextColor(Color.parseColor("#FF5722"));
         title.setGravity(Gravity.CENTER);
         root.addView(title);
 
         TextView subtitle = new TextView(this);
-        subtitle.setText("Tactical Soundboard & Custom Mechanical IME");
-        subtitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13);
-        subtitle.setTextColor(Color.parseColor("#9BA1AE"));
+        subtitle.setText("TACTICAL SOUNDBOARD & MECHANICAL IME");
+        subtitle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
+        subtitle.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
+        subtitle.setTextColor(Color.parseColor("#66FCF1"));
         subtitle.setGravity(Gravity.CENTER);
-        subtitle.setPadding(0, dp(4), 0, dp(20));
+        subtitle.setPadding(0, dp(6), 0, dp(24));
         root.addView(subtitle);
 
         LinearLayout row1 = new LinearLayout(this);
         row1.setOrientation(LinearLayout.HORIZONTAL);
         root.addView(row1);
 
-        Button fire = makeBtn("FIRE SHOTGUN", "#FF6B35", "#FFA573", row1);
-        Button reload = makeBtn("COCK & RELOAD", "#262930", "#3F4450", row1);
+        Button fire = makeButton("FIRE SHOTGUN", "#FF5722", "#FF8A65", row1);
+        Button reload = makeButton("RELOAD", "#1F2833", "#455A64", row1);
         fire.setOnClickListener(v -> play("shotgun.wav"));
         reload.setOnClickListener(v -> play("dragon-studio-cinematic-shotgun-with-reload-467480.wav"));
 
-        TextView volumeLabel = new TextView(this);
-        volumeLabel.setText("MASTER VOLUME: 100%");
-        volumeLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        volumeLabel.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
-        volumeLabel.setTextColor(Color.parseColor("#FFD166"));
-        volumeLabel.setPadding(dp(6), dp(16), dp(6), dp(6));
-        root.addView(volumeLabel);
+        TextView volLabel = new TextView(this);
+        volLabel.setText("MASTER VOLUME: 100%");
+        volLabel.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        volLabel.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
+        volLabel.setTextColor(Color.parseColor("#66FCF1"));
+        volLabel.setPadding(dp(6), dp(18), dp(6), dp(6));
+        root.addView(volLabel);
 
         SeekBar seek = new SeekBar(this);
         seek.setMax(100);
@@ -116,7 +117,7 @@ public class MainActivity extends Activity {
         seek.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener() {
             public void onProgressChanged(SeekBar s, int p, boolean user) {
                 volume = p / 100f;
-                volumeLabel.setText("MASTER VOLUME: " + p + "%");
+                volLabel.setText("MASTER VOLUME: " + p + "%");
             }
             public void onStartTrackingTouch(SeekBar s) {}
             public void onStopTrackingTouch(SeekBar s) {}
@@ -124,11 +125,11 @@ public class MainActivity extends Activity {
 
         LinearLayout row2 = new LinearLayout(this);
         row2.setOrientation(LinearLayout.HORIZONTAL);
-        row2.setPadding(0, dp(12), 0, dp(8));
+        row2.setPadding(0, dp(14), 0, dp(8));
         root.addView(row2);
 
-        Button enableBtn = makeBtn("1. Enable Keyboard", "#20232A", "#383E4A", row2);
-        Button selectBtn = makeBtn("2. Select Keyboard", "#20232A", "#FF6B35", row2);
+        Button enableBtn = makeButton("1. Enable IME", "#1F2833", "#37474F", row2);
+        Button selectBtn = makeButton("2. Select IME", "#1F2833", "#FF5722", row2);
         enableBtn.setOnClickListener(v -> startActivity(new Intent(Settings.ACTION_INPUT_METHOD_SETTINGS)));
         selectBtn.setOnClickListener(v -> {
             InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
@@ -136,25 +137,25 @@ public class MainActivity extends Activity {
         });
 
         EditText testInput = new EditText(this);
-        testInput.setHint("Tap here to test Shotgun Keys Keyboard...");
-        testInput.setHintTextColor(Color.parseColor("#6C727F"));
+        testInput.setHint("Test your custom mechanical keyboard here...");
+        testInput.setHintTextColor(Color.parseColor("#546E7A"));
         testInput.setTextColor(Color.WHITE);
-        testInput.setPadding(dp(14), dp(14), dp(14), dp(14));
-        testInput.setBackground(pill("#1A1D24", "#32363F", 10));
+        testInput.setPadding(dp(16), dp(16), dp(16), dp(16));
+        testInput.setBackground(cardBg("#141A23", "#263238", 12));
         LinearLayout.LayoutParams etLp = new LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
         etLp.setMargins(dp(6), dp(12), dp(6), dp(12));
         root.addView(testInput, etLp);
 
-        Button mute = makeBtn("Audio: ACTIVE (Tap to Mute)", "#1A1D24", "#32363F", root);
+        Button mute = makeButton("AUDIO FEEDBACK: ACTIVE", "#141A23", "#37474F", root);
         LinearLayout.LayoutParams muteLp = new LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.MATCH_PARENT, dp(44));
+            LinearLayout.LayoutParams.MATCH_PARENT, dp(48));
         muteLp.setMargins(dp(6), dp(4), dp(6), dp(4));
         mute.setLayoutParams(muteLp);
         mute.setOnClickListener(v -> {
             muted = !muted;
-            mute.setText(muted ? "Audio: MUTED (Tap to Unmute)" : "Audio: ACTIVE (Tap to Mute)");
-            mute.setTextColor(muted ? Color.parseColor("#FF5964") : Color.WHITE);
+            mute.setText(muted ? "AUDIO FEEDBACK: MUTED" : "AUDIO FEEDBACK: ACTIVE");
+            mute.setTextColor(muted ? Color.parseColor("#FF5252") : Color.WHITE);
         });
 
         setContentView(root);

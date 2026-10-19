@@ -50,7 +50,7 @@ public class ShotgunKeyboardService extends InputMethodService {
                 mp.prepare();
                 players[i] = mp;
             } catch (Exception e) {
-                android.util.Log.e("ShotgunKeys", "Pool init failed for slot " + i, e);
+                android.util.Log.e("ShotgunKeys", "Pool init failed", e);
             }
         }
     }
@@ -72,31 +72,22 @@ public class ShotgunKeyboardService extends InputMethodService {
                 } else {
                     mp.start();
                 }
-            } else {
-                // Fallback instant player if slot wasn't initialized
-                MediaPlayer fallback = new MediaPlayer();
-                AssetFileDescriptor afd = getAssets().openFd("shotgun.wav");
-                fallback.setDataSource(afd.getFileDescriptor(), afd.getStartOffset(), afd.getLength());
-                afd.close();
-                fallback.setOnCompletionListener(MediaPlayer::release);
-                fallback.prepare();
-                fallback.start();
             }
         } catch (Exception e) {
-            android.util.Log.e("ShotgunKeys", "Key sound playback error", e);
+            android.util.Log.e("ShotgunKeys", "Audio error", e);
         }
     }
 
-    private StateListDrawable createKeyBackground(int normalColor, int pressedColor, int strokeColor) {
+    private StateListDrawable createKeyBackground(String normalHex, String pressedHex, String strokeHex) {
         GradientDrawable normal = new GradientDrawable();
-        normal.setColor(normalColor);
+        normal.setColor(Color.parseColor(normalHex));
         normal.setCornerRadius(dp(8));
-        if (strokeColor != 0) {
-            normal.setStroke(dp(1), strokeColor);
+        if (strokeHex != null) {
+            normal.setStroke(dp(1), Color.parseColor(strokeHex));
         }
 
         GradientDrawable pressed = new GradientDrawable();
-        pressed.setColor(pressedColor);
+        pressed.setColor(Color.parseColor(pressedHex));
         pressed.setCornerRadius(dp(8));
 
         StateListDrawable states = new StateListDrawable();
@@ -115,23 +106,20 @@ public class ShotgunKeyboardService extends InputMethodService {
         btn.setGravity(Gravity.CENTER);
         btn.setPadding(0, 0, 0, 0);
 
-        int bgNormal = isAccent ? Color.parseColor("#FF6B35") : (isAction ? Color.parseColor("#262930") : Color.parseColor("#32363F"));
-        int bgPressed = isAccent ? Color.parseColor("#E85A24") : Color.parseColor("#4B515E");
-        int border = isAccent ? Color.parseColor("#FFA573") : Color.parseColor("#3F4450");
+        String bgNormal = isAccent ? "#FF5722" : (isAction ? "#141A23" : "#1F2833");
+        String bgPressed = isAccent ? "#E64A19" : "#37474F";
+        String stroke = isAccent ? "#FF8A65" : "#384252";
 
-        btn.setBackground(createKeyBackground(bgNormal, bgPressed, border));
+        btn.setBackground(createKeyBackground(bgNormal, bgPressed, stroke));
 
         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(50), weight);
-        int marginH = dp(3);
-        int marginV = dp(4);
-        lp.setMargins(marginH, marginV, marginH, marginV);
+        lp.setMargins(dp(3), dp(4), dp(3), dp(4));
         row.addView(btn, lp);
 
         if (!isAction && label.length() == 1 && Character.isLetter(label.charAt(0))) {
             letterKeys.add(btn);
         }
 
-        // Fire sound & haptics immediately on finger touch-down (ACTION_DOWN)
         btn.setOnTouchListener((v, event) -> {
             if (event.getAction() == MotionEvent.ACTION_DOWN) {
                 v.performHapticFeedback(HapticFeedbackConstants.KEYBOARD_TAP);
@@ -160,9 +148,7 @@ public class ShotgunKeyboardService extends InputMethodService {
                     }
                     break;
                 default:
-                    if (ic != null) {
-                        ic.commitText(btn.getText().toString(), 1);
-                    }
+                    if (ic != null) ic.commitText(btn.getText().toString(), 1);
             }
         });
         return btn;
@@ -200,7 +186,7 @@ public class ShotgunKeyboardService extends InputMethodService {
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
         root.setPadding(dp(6), dp(10), dp(6), dp(12));
-        root.setBackgroundColor(Color.parseColor("#15171C"));
+        root.setBackgroundColor(Color.parseColor("#0B0C10"));
 
         LinearLayout toolbar = new LinearLayout(this);
         toolbar.setOrientation(LinearLayout.HORIZONTAL);
@@ -210,8 +196,8 @@ public class ShotgunKeyboardService extends InputMethodService {
         Button soundToggle = new Button(this);
         soundToggle.setText(soundEnabled ? "SFX: ON" : "SFX: OFF");
         soundToggle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
-        soundToggle.setTextColor(soundEnabled ? Color.parseColor("#FFD166") : Color.parseColor("#8E929B"));
-        soundToggle.setBackground(createKeyBackground(Color.parseColor("#20232A"), Color.parseColor("#2C313B"), Color.parseColor("#383E4A")));
+        soundToggle.setTextColor(soundEnabled ? Color.parseColor("#66FCF1") : Color.parseColor("#546E7A"));
+        soundToggle.setBackground(createKeyBackground("#141A23", "#1F2833", "#37474F"));
         LinearLayout.LayoutParams tbParams = new LinearLayout.LayoutParams(dp(110), dp(32));
         toolbar.addView(soundToggle, tbParams);
         root.addView(toolbar);
@@ -219,7 +205,7 @@ public class ShotgunKeyboardService extends InputMethodService {
         soundToggle.setOnClickListener(v -> {
             soundEnabled = !soundEnabled;
             soundToggle.setText(soundEnabled ? "SFX: ON" : "SFX: OFF");
-            soundToggle.setTextColor(soundEnabled ? Color.parseColor("#FFD166") : Color.parseColor("#8E929B"));
+            soundToggle.setTextColor(soundEnabled ? Color.parseColor("#66FCF1") : Color.parseColor("#546E7A"));
             if (soundEnabled) playShotgun();
         });
 
