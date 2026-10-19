@@ -25,6 +25,7 @@ public class ShotgunKeyboardService extends InputMethodService {
     private int poolIndex = 0;
     private boolean soundEnabled = true;
     private boolean isShifted = false;
+    private boolean isSymbols = false;
     private final List<Button> letterKeys = new ArrayList<>();
 
     private int dp(int value) {
@@ -81,14 +82,14 @@ public class ShotgunKeyboardService extends InputMethodService {
     private StateListDrawable createKeyBackground(String normalHex, String pressedHex, String strokeHex) {
         GradientDrawable normal = new GradientDrawable();
         normal.setColor(Color.parseColor(normalHex));
-        normal.setCornerRadius(dp(8));
+        normal.setCornerRadius(dp(6));
         if (strokeHex != null) {
             normal.setStroke(dp(1), Color.parseColor(strokeHex));
         }
 
         GradientDrawable pressed = new GradientDrawable();
         pressed.setColor(Color.parseColor(pressedHex));
-        pressed.setCornerRadius(dp(8));
+        pressed.setCornerRadius(dp(6));
 
         StateListDrawable states = new StateListDrawable();
         states.addState(new int[]{android.R.attr.state_pressed}, pressed);
@@ -99,7 +100,7 @@ public class ShotgunKeyboardService extends InputMethodService {
     private Button makeKey(String label, LinearLayout row, float weight, boolean isAction, boolean isAccent) {
         Button btn = new Button(this);
         btn.setText(label);
-        btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, isAction ? 14 : 17);
+        btn.setTextSize(TypedValue.COMPLEX_UNIT_SP, isAction ? 13 : 16);
         btn.setTextColor(Color.parseColor("#F5F6F8"));
         btn.setTypeface(Typeface.SANS_SERIF, Typeface.BOLD);
         btn.setAllCaps(false);
@@ -112,8 +113,8 @@ public class ShotgunKeyboardService extends InputMethodService {
 
         btn.setBackground(createKeyBackground(bgNormal, bgPressed, stroke));
 
-        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(50), weight);
-        lp.setMargins(dp(3), dp(4), dp(3), dp(4));
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(0, dp(44), weight);
+        lp.setMargins(dp(2), dp(3), dp(2), dp(3));
         row.addView(btn, lp);
 
         if (!isAction && label.length() == 1 && Character.isLetter(label.charAt(0))) {
@@ -147,6 +148,11 @@ public class ShotgunKeyboardService extends InputMethodService {
                         b.setText(isShifted ? txt.toUpperCase() : txt.toLowerCase());
                     }
                     break;
+                case "?123":
+                case "ABC":
+                    isSymbols = !isSymbols;
+                    setInputView(onCreateInputView());
+                    break;
                 default:
                     if (ic != null) ic.commitText(btn.getText().toString(), 1);
             }
@@ -166,14 +172,14 @@ public class ShotgunKeyboardService extends InputMethodService {
             boolean isAccent = false;
 
             if (key.equals("SPACE")) {
-                weight = 4.2f;
+                weight = 4.5f;
                 isAction = true;
             } else if (key.equals("ENTER")) {
-                weight = 1.6f;
+                weight = 1.8f;
                 isAction = true;
                 isAccent = true;
-            } else if (key.equals("DEL") || key.equals("SHIFT")) {
-                weight = 1.4f;
+            } else if (key.equals("DEL") || key.equals("SHIFT") || key.equals("?123") || key.equals("ABC")) {
+                weight = 1.3f;
                 isAction = true;
             }
             makeKey(key, row, weight, isAction, isAccent);
@@ -185,20 +191,20 @@ public class ShotgunKeyboardService extends InputMethodService {
         letterKeys.clear();
         LinearLayout root = new LinearLayout(this);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(6), dp(10), dp(6), dp(12));
+        root.setPadding(dp(4), dp(6), dp(4), dp(8));
         root.setBackgroundColor(Color.parseColor("#0B0C10"));
 
         LinearLayout toolbar = new LinearLayout(this);
         toolbar.setOrientation(LinearLayout.HORIZONTAL);
         toolbar.setGravity(Gravity.END);
-        toolbar.setPadding(dp(4), 0, dp(4), dp(4));
+        toolbar.setPadding(dp(2), 0, dp(2), dp(2));
 
         Button soundToggle = new Button(this);
         soundToggle.setText(soundEnabled ? "SFX: ON" : "SFX: OFF");
-        soundToggle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 12);
+        soundToggle.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11);
         soundToggle.setTextColor(soundEnabled ? Color.parseColor("#66FCF1") : Color.parseColor("#546E7A"));
         soundToggle.setBackground(createKeyBackground("#141A23", "#1F2833", "#37474F"));
-        LinearLayout.LayoutParams tbParams = new LinearLayout.LayoutParams(dp(110), dp(32));
+        LinearLayout.LayoutParams tbParams = new LinearLayout.LayoutParams(dp(100), dp(28));
         toolbar.addView(soundToggle, tbParams);
         root.addView(toolbar);
 
@@ -209,10 +215,17 @@ public class ShotgunKeyboardService extends InputMethodService {
             if (soundEnabled) playShotgun();
         });
 
-        addRow(root, new String[]{"q", "w", "e", "r", "t", "y", "u", "i", "o", "p"});
-        addRow(root, new String[]{"a", "s", "d", "f", "g", "h", "j", "k", "l"});
-        addRow(root, new String[]{"SHIFT", "z", "x", "c", "v", "b", "n", "m", "DEL"});
-        addRow(root, new String[]{"?123", ",", "SPACE", ".", "ENTER"});
+        if (!isSymbols) {
+            addRow(root, new String[]{"q", "w", "e", "r", "t", "y", "u", "i", "o", "p"});
+            addRow(root, new String[]{"a", "s", "d", "f", "g", "h", "j", "k", "l"});
+            addRow(root, new String[]{"SHIFT", "z", "x", "c", "v", "b", "n", "m", "DEL"});
+            addRow(root, new String[]{"?123", ",", "SPACE", ".", "ENTER"});
+        } else {
+            addRow(root, new String[]{"1", "2", "3", "4", "5", "6", "7", "8", "9", "0"});
+            addRow(root, new String[]{"@", "#", "$", "%", "&", "-", "_", "+", "(", ")"});
+            addRow(root, new String[]{";", ":", "\"", "'", "/", "!", "?", "DEL"});
+            addRow(root, new String[]{"ABC", ",", "SPACE", ".", "ENTER"});
+        }
 
         return root;
     }

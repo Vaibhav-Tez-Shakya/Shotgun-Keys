@@ -22,7 +22,7 @@
 
         <service
             android:name=".ShotgunKeyboardService"
-            android:label="Shotgun Keys Keyboard"
+            android:label="Shotgun Keys"
             android:permission="android.permission.BIND_INPUT_METHOD"
             android:exported="true">
             <intent-filter>
